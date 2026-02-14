@@ -6,8 +6,10 @@
   <h1>Text2img · Cloudflare Workers</h1>
   <p>基于 Cloudflare Workers AI 的在线文生图/图生图/重绘服务，开箱即用。</p>
   <p>本项目基于 [huarzone/Text2img-Cloudflare-Workers](https://github.com/huarzone/Text2img-Cloudflare-Workers?tab=readme-ov-file) 进行二次开发和功能增强。</p>
-
+  <p><strong>新增：支持通过 GitHub 直接部署到 Cloudflare Workers！</strong></p>
 </div>
+
+---
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="public/top-dark.png">
@@ -24,7 +26,91 @@
 
 ---
 
-## 一键部署
+## GitHub 直接部署（推荐）
+
+### 前置要求
+
+1. Cloudflare 账号
+2. GitHub 账号
+
+### 步骤 1：准备仓库
+
+1. Fork 本仓库到你自己的 GitHub 账号
+2. （可选）克隆到本地进行自定义修改
+
+### 步骤 2：连接 Cloudflare Workers
+
+1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
+2. 进入 **Workers & Pages**
+3. 点击 **创建应用程序** → **连接到 Git**
+4. 选择你的 GitHub 仓库并授权
+5. 选择 **text2img** 项目（如果没有，点击 **开始设置**）
+
+### 步骤 3：配置构建设置
+
+在 **构建设置** 中：
+- **构建命令**：留空（Workers 不需要构建）
+- **构建输出目录**：`/`（根目录）
+
+### 步骤 4：绑定 Workers AI
+
+1. 在部署前，进入 **设置** → **绑定**
+2. 点击 **添加绑定** → **Workers AI**
+3. 变量名填写：`AI`
+4. 点击 **保存**
+
+### 步骤 5：配置密码（可选）
+
+**方式 A：使用 Cloudflare Secrets（推荐）**
+
+1. 进入 **设置** → **变量和密钥**
+2. 切换到 **密钥** 选项卡
+3. 点击 **添加密钥**
+4. 变量名：`PASSWORDS`
+5. 值：`["your-password-1", "your-password-2"]`（JSON 数组格式）
+6. 点击 **加密并保存**
+
+**方式 B：使用 Wrangler CLI**
+
+```bash
+npm install -g wrangler
+wrangler secret put PASSWORDS
+# 输入：["your-password-1"]
+```
+
+### 步骤 6：部署
+
+1. 点击 **部署** → **保存并部署**
+2. 等待部署完成（通常几秒钟）
+3. 访问 `https://text2img.your-subdomain.workers.dev/`
+
+### 后续更新
+
+- 推送代码到 GitHub 后，在 Cloudflare Dashboard 点击 **重新部署**
+- 或启用 **自动部署**，推送代码时自动触发
+
+---
+
+## 本地开发（可选）
+
+```bash
+# 克隆仓库
+git clone https://github.com/YOUR_USERNAME/Text2img-Cloudflare-Workers.git
+cd Text2img-Cloudflare-Workers
+
+# 安装依赖
+npm install
+
+# 本地开发
+npm run dev
+
+# 部署到 Cloudflare
+npm run deploy
+```
+
+---
+
+## 手动部署（传统方式）
 
 1) Cloudflare 控制台 → Workers & Pages → 创建 Worker → 部署。
 

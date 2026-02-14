@@ -70,13 +70,24 @@ const RANDOM_PROMPTS = [
   'beautiful girl, breasts, curvy, looking down scope, looking away from viewer, laying on the ground, laying ontop of jacket, aiming a sniper rifle, dark braided hair, backwards hat, armor, sleeveless, arm sleeve tattoos, muscle tone, dogtags, sweaty, foreshortening, depth of field, at night, night, alpine, lightly snowing, dusting of snow, Closeup, detailed face, freckles',
 ];
 
-// Passwords for authentication
-// demo: const PASSWORDS = ['P@ssw0rd']
-const PASSWORDS = ['admin123']
-
+// Passwords for authentication (read from environment)
+// Configure in Cloudflare Dashboard: Settings → Variables & Secrets
+// Or use: wrangler secret put PASSWORDS
+// demo: ["P@ssw0rd"]
+let PASSWORDS = [];
 
 export default {
   async fetch(request, env) {
+    // Load passwords from environment on first request
+    if (PASSWORDS.length === 0 && env.PASSWORDS) {
+      try {
+        PASSWORDS = JSON.parse(env.PASSWORDS);
+      } catch (e) {
+        console.error('Failed to parse PASSWORDS:', e);
+        PASSWORDS = [];
+      }
+    }
+
     const originalHost = request.headers.get("host");
 
     // CORS Headers

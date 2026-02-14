@@ -1,0 +1,31 @@
+{
+  "name": "text2img-cloudflare-workers",
+  "version": "1.0.0",
+  "description": "基于 Cloudflare Workers AI 的在线文生图服务，支持图生图、局部重绘等功能",
+  "main": "worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler publish",
+    "login": "wrangler login"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "ai",
+    "image-generation",
+    "stable-diffusion",
+    "flux",
+    "text-to-image",
+    "img2img",
+    "inpainting"
+  ],
+  "author": "kared",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/Text2img-Cloudflare-Workers.git"
+  }
+}

@@ -1,0 +1,27 @@
+name = "text2img"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+account_id = ""
+
+# Workers AI binding (required)
+[ai]
+binding = "AI"
+
+# Routes configuration (optional)
+# Configure custom domains in Cloudflare Dashboard after deployment
+# routes = [
+#   { pattern = "your-domain.com/*", zone_name = "your-domain.com" }
+# ]
+
+# Environment variables (non-sensitive)
+[vars]
+# Add non-sensitive configuration here
+# For sensitive data like passwords, use Cloudflare Secrets
+
+# Production environment configuration
+# [env.production]
+# [env.production.vars]
+
+# Preview environment configuration
+# [env.preview]
+# [env.preview.vars]
