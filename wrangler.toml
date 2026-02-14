@@ -1,4 +1,4 @@
-name = "text2img"
+name = "cf-ai-image"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 account_id = ""
