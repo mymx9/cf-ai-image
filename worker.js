@@ -72,11 +72,12 @@ const RANDOM_PROMPTS = [
 
 // Passwords for authentication
 // demo: const PASSWORDS = ['P@ssw0rd']
-const PASSWORDS = env.PASSWORDS ? JSON.parse(env.PASSWORDS) : [];
+const getDefaultPasswords = (env) => env.PASSWORDS ? JSON.parse(env.PASSWORDS) : [];
 
 
 export default {
   async fetch(request, env) {
+    const PASSWORDS = getDefaultPasswords(env);
     const originalHost = request.headers.get("host");
 
     // CORS Headers
