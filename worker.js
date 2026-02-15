@@ -72,7 +72,14 @@ const RANDOM_PROMPTS = [
 
 // Passwords for authentication
 // demo: const PASSWORDS = ['P@ssw0rd']
-const getDefaultPasswords = (env) => env.PASSWORDS ? JSON.parse(env.PASSWORDS) : [];
+const getDefaultPasswords = (env) => {
+  try {
+    return env.PASSWORDS ? JSON.parse(env.PASSWORDS) : [];
+  } catch (e) {
+    console.error('Failed to parse PASSWORDS:', e);
+    return [];
+  }
+};
 
 
 export default {
