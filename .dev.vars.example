@@ -1,0 +1,2 @@
+# 密码列表（JSON 数组字符串格式）
+PASSWORDS='["admin123"]'

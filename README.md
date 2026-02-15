@@ -38,6 +38,48 @@
 
 ---
 
+## GitHub 自动部署（推荐）
+
+1) **安装 Wrangler CLI**：
+   ```bash
+   npm install -g wrangler
+   ```
+
+2) **登录 Cloudflare**：
+   ```bash
+   wrangler login
+   ```
+
+3) **配置环境变量**（可选，设置访问密码）：
+   ```bash
+   wrangler secret put PASSWORDS
+   # 提示时输入: ["admin123"]
+   ```
+
+4) **连接到 Cloudflare Dashboard**：
+   - Cloudflare 控制台 → Workers & Pages
+   - 点击 "Create application" → "Connect to Git"
+   - 选择 GitHub 仓库 `mymx9/cf-ai-image`
+   - 选择 `main` 分支，保存并部署
+
+5) **自动部署已启用**：
+   - 推送代码到 `main` 分支自动触发部署
+   - 在 Cloudflare Dashboard → Builds 查看部署状态
+
+**本地开发**：
+```bash
+# 安装依赖
+npm install
+
+# 启动本地开发服务器
+npm run dev
+
+# 查看实时日志
+npm run tail
+```
+
+---
+
 ## 使用说明（前端）
 
 - 基本：输入访问密码（若启用）→ 填写提示词 → 选择模型 → 配置尺寸/步数/引导/种子 → 选择“生成数量” → 生成。
@@ -96,7 +138,10 @@ curl -X POST https://<worker>.<subdomain>.workers.dev/ \
 
 - 模型清单：编辑 `src/worker.js` 中 `AVAILABLE_MODELS` 可增删/改描述、是否需要图片/遮罩。
 - 随机提示词：在 `RANDOM_PROMPTS` 维护。
-- 密码：`PASSWORDS=['admin123']`（留空即无密码），前端含登录遮罩与 Cookie 认证。
+- 密码：通过 Cloudflare Dashboard 环境变量 `PASSWORDS` 设置（格式：JSON 数组字符串）
+  - Dashboard 方式：设置 → 变量和密码 → 添加变量 → `PASSWORDS` = `["admin123"]`
+  - CLI 方式：`wrangler secret put PASSWORDS`
+  - 未设置时无需密码即可访问
 - 生成数量：默认开放 1–8，可在前端下拉与后端上限同步调整。
 
 ---
