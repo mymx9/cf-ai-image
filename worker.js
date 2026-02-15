@@ -298,7 +298,6 @@ export default {
             // 兼容一些模型对字段命名的要求：有的需要 mask_image
             inputs = {
               prompt: data.prompt || 'cyberpunk cat',
-              negative_prompt: data.negative_prompt || '',
               // 建议使用更小的分辨率，避免 3001 内部错误
               height: sanitizeDimension(parseInt(data.height, 10) || 512, 512),
               width: sanitizeDimension(parseInt(data.width, 10) || 512, 512),
@@ -309,18 +308,28 @@ export default {
               image: [...imageResult.bytes],
               ...(maskBytes ? { mask: [...maskBytes], mask_image: [...maskBytes] } : {})
             };
+            // Only add negative_prompt if it has a value (some models reject empty strings)
+            if (data.negative_prompt && data.negative_prompt.trim().length > 0) {
+              inputs.negative_prompt = data.negative_prompt;
+            }
           } else {
-            // Default input parameters
+            // Default input parameters for text-to-image models
             inputs = {
               prompt: data.prompt || 'cyberpunk cat',
-              negative_prompt: data.negative_prompt || '',
               height: data.height || 1024,
               width: data.width || 1024,
               num_steps: data.num_steps || 20,
-              strength: data.strength || 0.1,
               guidance: data.guidance || 7.5,
               seed: data.seed || parseInt((Math.random() * 1024 * 1024).toString(), 10),
             };
+            // Only add negative_prompt if it has a value (some models reject empty strings)
+            if (data.negative_prompt && data.negative_prompt.trim().length > 0) {
+              inputs.negative_prompt = data.negative_prompt;
+            }
+            // Only add strength if explicitly provided (for img2img compatibility)
+            if (data.strength !== undefined && data.strength !== null) {
+              inputs.strength = data.strength;
+            }
           }
 
           console.log(`Generating image with ${model} and prompt: ${data.prompt?.substring(0, 50) || '(no prompt)'}...`);
