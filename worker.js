@@ -53,6 +53,41 @@ const AVAILABLE_MODELS = [
     key: '@cf/runwayml/stable-diffusion-v1-5-inpainting',
     requiresImage: true,
     requiresMask: true
+  },
+  {
+    id: 'phoenix-1.0',
+    name: 'Phoenix 1.0',
+    description: 'Leonardo.Ai 出品，具有出色的提示词依从性和文本连贯性',
+    key: '@cf/leonardo/phoenix-1.0',
+    requiresImage: false
+  },
+  {
+    id: 'flux-2-klein-9b',
+    name: 'FLUX.2 [klein] 9B',
+    description: '超快速的蒸馏图像模型，统一图像生成和编辑',
+    key: '@cf/black-forest-labs/flux-2-klein-9b',
+    requiresImage: false
+  },
+  {
+    id: 'flux-2-klein-4b',
+    name: 'FLUX.2 [klein] 4B',
+    description: '超快速蒸馏模型，支持图像生成和编辑，更低参数量',
+    key: '@cf/black-forest-labs/flux-2-klein-4b',
+    requiresImage: false
+  },
+  {
+    id: 'flux-2-dev',
+    name: 'FLUX.2 [dev]',
+    description: '生成高度逼真和详细的图像，支持多参考',
+    key: '@cf/black-forest-labs/flux-2-dev',
+    requiresImage: false
+  },
+  {
+    id: 'lucid-origin',
+    name: 'Lucid Origin',
+    description: 'Leonardo.AI 最具适应性的模型，出色的提示词依从性和文本渲染',
+    key: '@cf/leonardo/lucid-origin',
+    requiresImage: false
   }
 ];
 
@@ -197,11 +232,29 @@ export default {
             let steps = data.num_steps || 6;
             if (steps >= 8) steps = 8;
             else if (steps <= 4) steps = 4;
-            
+
             // Only prompt and steps
             inputs = {
               prompt: data.prompt || 'cyberpunk cat',
               steps: steps
+            };
+          } else if (data.model === 'flux-2-klein-9b' || data.model === 'flux-2-klein-4b' || data.model === 'flux-2-dev') {
+            // Build FormData for FLUX.2 models
+            const form = new FormData();
+            form.append('prompt', data.prompt || 'a sunset with a dog');
+            form.append('width', String(sanitizeDimension(parseInt(data.width, 10) || 1024, 1024)));
+            form.append('height', String(sanitizeDimension(parseInt(data.height, 10) || 1024, 1024)));
+            form.append('steps', String(clamp(parseInt(data.num_steps, 10) || 25, 1, 50)));
+
+            // Create a Response to serialize FormData with proper boundary
+            const formResponse = new Response(form);
+            const formStream = formResponse.body;
+            const formContentType = formResponse.headers.get('content-type');
+
+            inputs = {
+              __multipart: true,
+              body: formStream,
+              contentType: formContentType
             };
           } else if (
             data.model === 'stable-diffusion-v1-5-img2img' ||
@@ -270,15 +323,41 @@ export default {
             };
           }
 
-          console.log(`Generating image with ${model} and prompt: ${inputs.prompt.substring(0, 50)}...`);
-          
+          console.log(`Generating image with ${model} and prompt: ${data.prompt?.substring(0, 50) || '(no prompt)'}...`);
+
           try {
             const numOutputs = clamp(parseInt(data.num_outputs, 10) || 1, 1, 8);
             const generateOnce = async (seedOffset = 0) => {
-              const localInputs = { ...inputs };
-              if (typeof localInputs.seed === 'number') localInputs.seed = localInputs.seed + seedOffset;
+              let runInputs;
+              if (inputs.__multipart) {
+                // For multipart models, create new FormData for each call
+                const form = new FormData();
+                let promptVal = data.prompt || 'a sunset with a dog';
+                // Add a small variation for multi-image generation with multipart models
+                // since they don't support seed parameter
+                if (seedOffset > 0) {
+                  promptVal = `${promptVal}, variation ${seedOffset}`;
+                }
+                const widthVal = String(sanitizeDimension(parseInt(data.width, 10) || 1024, 1024));
+                const heightVal = String(sanitizeDimension(parseInt(data.height, 10) || 1024, 1024));
+                const stepsVal = String(clamp(parseInt(data.num_steps, 10) || 25, 1, 50));
+                form.append('prompt', promptVal);
+                form.append('width', widthVal);
+                form.append('height', heightVal);
+                form.append('steps', stepsVal);
+                const formResponse = new Response(form);
+                runInputs = {
+                  multipart: {
+                    body: formResponse.body,
+                    contentType: formResponse.headers.get('content-type')
+                  }
+                };
+              } else {
+                runInputs = { ...inputs };
+                if (typeof runInputs.seed === 'number') runInputs.seed = runInputs.seed + seedOffset;
+              }
               const t0 = Date.now();
-              const res = await env.AI.run(model, localInputs);
+              const res = await env.AI.run(model, runInputs);
               const t1 = Date.now();
               return { res, seconds: (t1 - t0) / 1000 };
             };
@@ -301,9 +380,9 @@ export default {
 
               const images = [];
               for (const { res } of results) {
-                if (data.model === 'flux-1-schnell') {
+                if (data.model === 'flux-1-schnell' || data.model === 'flux-2-klein-9b' || data.model === 'flux-2-klein-4b' || data.model === 'flux-2-dev' || data.model === 'lucid-origin') {
                   const json = typeof res === 'object' ? res : JSON.parse(res);
-                  if (!json.image) throw new Error('Invalid response from FLUX: missing image');
+                  if (!json.image) throw new Error('Invalid response from model: missing image');
                   images.push(`data:image/png;base64,${json.image}`);
                 } else {
                   // binary bytes -> base64
@@ -326,9 +405,9 @@ export default {
             }
 
             const { res: response, seconds: serverSeconds } = await generateOnce(0);
-  
-            // Processing the response of the flux-1-schnell model
-            if (data.model === 'flux-1-schnell') {
+
+            // Processing the response of models with JSON output (base64 image)
+            if (data.model === 'flux-1-schnell' || data.model === 'flux-2-klein-9b' || data.model === 'flux-2-klein-4b' || data.model === 'flux-2-dev' || data.model === 'lucid-origin') {
               let jsonResponse;
   
               if (typeof response === 'object') {
